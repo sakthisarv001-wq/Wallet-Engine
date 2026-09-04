@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transfer Money</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Transfer Money</h1>
+
+    <input
+            type="number"
+            id="senderWalletId"
+            placeholder="Sender Wallet ID"
+    >
+
+    <br><br>
+
+    <input
+            type="number"
+            id="receiverWalletId"
+            placeholder="Receiver Wallet ID"
+    >
+
+    <br><br>
+
+    <input
+            type="number"
+            step="0.01"
+            id="amount"
+            placeholder="Amount"
+    >
+
+    <br><br>
+
+    <input
+            type="text"
+            id="idempotencyKey"
+            placeholder="Idempotency Key"
+    >
+
+    <br><br>
+
+    <button onclick="makeTransfer()">
+        Transfer
+    </button>
+
+    <div id="result"></div>
+
+    <br>
+
+    <a href="/">Back to Dashboard</a>
+
+</div>
+
+<script>
+
+    async function makeTransfer() {
+
+        const senderWalletId =
+            document.getElementById("senderWalletId").value;
+
+        const receiverWalletId =
+            document.getElementById("receiverWalletId").value;
+
+        const amount =
+            document.getElementById("amount").value;
+
+        const idempotencyKey =
+            document.getElementById("idempotencyKey").value;
+
+        if (!senderWalletId ||
+            !receiverWalletId ||
+            !amount ||
+            !idempotencyKey) {
+
+            alert("Please fill all fields");
+            return;
+        }
+
+        const requestBody = {
+            senderWalletId: Number(senderWalletId),
+            receiverWalletId: Number(receiverWalletId),
+            amount: Number(amount)
+        };
+
+        try {
+
+            const response = await fetch("/transfers", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Idempotency-Key": idempotencyKey
+                },
+
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Transfer failed"
+                );
+            }
+
+            document.getElementById("result").innerHTML = `
+                <h3>Transfer Successful</h3>
+                <p>Transfer ID: ${data.id}</p>
+                <p>Status: ${data.status}</p>
+                <p>Amount: ₹${data.amount}</p>
+            `;
+
+        } catch (error) {
+
+            document.getElementById("result").innerHTML = `
+                <p>${error.message}</p>
+            `;
+
+        }
+    }
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wallet Statement</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Wallet Statement</h1>
+
+    <input
+            type="number"
+            id="walletId"
+            placeholder="Wallet ID"
+    >
+
+    <button onclick="loadStatement()">
+        View Statement
+    </button>
+
+    <div id="summary"></div>
+
+    <div id="entries"></div>
+
+    <br>
+
+    <a href="/">Back to Dashboard</a>
+
+</div>
+
+<script>
+
+    async function loadStatement() {
+
+        const walletId =
+            document.getElementById("walletId").value;
+
+        if (!walletId) {
+            alert("Enter Wallet ID");
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(`/wallets/${walletId}/statement`);
+
+            if (!response.ok) {
+                throw new Error("Statement not found");
+            }
+
+            const data = await response.json();
+
+            document.getElementById("summary").innerHTML = `
+                <h2>Wallet ID: ${data.walletId}</h2>
+                <p>Total Credits: ₹${data.totalCredits}</p>
+                <p>Total Debits: ₹${data.totalDebits}</p>
+                <p>Current Balance: ₹${data.currentBalance}</p>
+            `;
+
+            let html = `
+                <h2>Ledger Entries</h2>
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+            `;
+
+            data.entries.forEach(entry => {
+
+                html += `
+                    <tr>
+                        <td>${entry.id}</td>
+                        <td>${entry.entryType}</td>
+                        <td>₹${entry.amount}</td>
+                        <td>${entry.createdAt}</td>
+                    </tr>
+                `;
+
+            });
+
+            html += `</table>`;
+
+            document.getElementById("entries").innerHTML = html;
+
+        } catch (error) {
+
+            document.getElementById("summary").innerHTML =
+                `<p>${error.message}</p>`;
+
+        }
+    }
+
+</script>
+
+</body>
+</html>
